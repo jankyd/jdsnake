@@ -82,12 +82,27 @@ snake* initSnake(WINDOW *win) {
  * Handle updating the snake data (POST MOVE INPUT!)
  * Does NOT handle food overlap (yet?)
  */
-void movSnake(snake *s) {
+void movSnake(snake *s, bool ate = false) {
+    // determine movement case
     switch (s->currDir) {
         case DRIGHT:
-
-            s->snakeQueue.push_front(new struct snakeNode())
+            s->x += 1;
+            break;
+        case DLEFT:
+            s->x -= 1;
+            break;
+        case DUP:
+            s->y -= 1;
+            break;
+        case DDOWN:
+            s->y += 1;
+            break;
     }
+    // move the head
+    s->snakeQueue.push_front(new struct snakeNode(s->x,s->y));
+    // if snake did not eat, pop the last snakeNode
+    if (!ate) s->snakeQueue.pop_back();
+    return;
 }
 
 int main() {
