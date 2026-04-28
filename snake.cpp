@@ -1,13 +1,21 @@
 #include <stdlib.h>
 #include <ncurses.h>
 #include <iostream>
+#include <deque>
 
 using namespace std;
 
-#define WIN_HEIGHT 10
-#define WIN_WIDTH 25
+#define WIN_HEIGHT 12
+#define WIN_WIDTH 30
 #define WIN_Y (LINES - WIN_HEIGHT)/2
 #define WIN_X (COLS - WIN_WIDTH)/2
+#define SNAKE_CHAR '#'
+#define FOOD_CHAR '$'
+
+
+// ! Global Variables !
+bool GAME_OVER = false;
+int points = 0;
 
 enum Direction {
     DUP,
@@ -21,17 +29,23 @@ struct food {
     int y;
 };
 
+/**
+ * Uses a deque to store 
+ */
 struct snakeNode {
     int x;
     int y;
-    struct snakeNode *link;
+    snakeNode() : x(0), y(0) {}
+    snakeNode(int dx, int dy) : x(dx), y(dy) {}
 };
 
 struct snake {
+    // coords of the head
     int x;
     int y;
+
     int length;
-    struct snakeNode *head;
+    std::deque<snakeNode*> snakeQueue;
     Direction currDir = DRIGHT;
 };
 
@@ -41,26 +55,48 @@ struct snake {
 WINDOW* displayInit() {
     
     initscr();
+    clear();
     noecho();
-    curs_set(0);
     cbreak();
-    timeout(20);
+    //timeout(20);
+    refresh();
     WINDOW *win = newwin(WIN_HEIGHT, WIN_WIDTH, WIN_Y, WIN_X);
+    curs_set(0);
+    box(win, 0, 0);
+    mvwprintw(win, 0, 1, "* Snake Game *");
+    wrefresh(win);
     return win;
 }
 
-int main() {
-    initscr();
-    
-    WINDOW *win = newwin(WIN_HEIGHT, WIN_WIDTH, WIN_Y, WIN_X);
-    curs_set(0);
-    clear();
-    refresh();
-    box(win, 0, 0);
+snake* initSnake(WINDOW *win) {
+    snake *snake = new struct snake();
+    snake->y = WIN_HEIGHT / 2;
+    snake->x = 4;
+    // place the head
+    snake->snakeQueue.push_front(new struct snakeNode(snake->x, snake->y));
+    snake->length = 1;
+    return snake;
+}
 
-    mvwprintw(win, 0, 1,"Centered Window!");
+/**
+ * Handle updating the snake data (POST MOVE INPUT!)
+ * Does NOT handle food overlap (yet?)
+ */
+void movSnake(snake *s) {
+    switch (s->currDir) {
+        case DRIGHT:
+
+            s->snakeQueue.push_front(new struct snakeNode())
+    }
+}
+
+int main() {
+    WINDOW *win = displayInit();
     wrefresh(win);
-    getch();
+    getch(); // pause for debugging
+    
+    
+    
     
     endwin();
     return 0;
