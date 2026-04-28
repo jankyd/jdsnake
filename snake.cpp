@@ -2,6 +2,7 @@
 #include <ncurses.h>
 #include <iostream>
 #include <deque>
+#include <random>
 
 using namespace std;
 
@@ -16,6 +17,13 @@ using namespace std;
 // ! Global Variables !
 bool GAME_OVER = false;
 int points = 0;
+struct food *f;
+
+// randomizer for food placement
+random_device rd;
+mt19937 gen(rd());
+uniform_int_distribution<> distX(1, WIN_WIDTH-1); // for X ranges
+uniform_int_distribution<> distY(1,WIN_HEIGHT-1); // for Y range
 
 enum Direction {
     DUP,
@@ -63,7 +71,7 @@ WINDOW* displayInit() {
     WINDOW *win = newwin(WIN_HEIGHT, WIN_WIDTH, WIN_Y, WIN_X);
     curs_set(0);
     box(win, 0, 0);
-    mvwprintw(win, 0, 1, "* Snake Game *");
+    mvwprintw(win, 0, 1, "* Snake *");
     wrefresh(win);
     return win;
 }
@@ -78,11 +86,24 @@ snake* initSnake(WINDOW *win) {
     return snake;
 }
 
+// Set up other game parameters (points -> 0, first food placement)
+void initGame(WINDOW *win) {
+    points = 0;
+    f = new struct food();
+    while (true) {
+        f->x = distX(gen);
+        f->y = distY(gen);
+        // ensure it doesn't generate on the snake head
+        if (!(f->x == 4 && f->y == WIN_HEIGHT / 2)) break;
+    }
+
+    return;
+}
+
 /**
  * Handle updating the snake data (POST MOVE INPUT!)
- * Does NOT handle food overlap (yet?)
  */
-void movSnake(snake *s, bool ate = false) {
+void movSnake(snake *s) {
     // determine movement case
     switch (s->currDir) {
         case DRIGHT:
@@ -100,18 +121,17 @@ void movSnake(snake *s, bool ate = false) {
     }
     // move the head
     s->snakeQueue.push_front(new struct snakeNode(s->x,s->y));
-    // if snake did not eat, pop the last snakeNode
-    if (!ate) s->snakeQueue.pop_back();
+    // if snake did not eat, pop the last snakeNode, else leave it (grows)
+    if (!(s->y == f->y && s->x == f->y)) s->snakeQueue.pop_back();
     return;
 }
 
+
 int main() {
     WINDOW *win = displayInit();
+    struct snake *s = initSnake(win);
     wrefresh(win);
     getch(); // pause for debugging
-    
-    
-    
     
     endwin();
     return 0;
