@@ -8,12 +8,21 @@ using namespace std;
 
 #define WIN_HEIGHT 12
 #define WIN_WIDTH 30
+// Centers play window
 #define WIN_Y (LINES - WIN_HEIGHT)/2
 #define WIN_X (COLS - WIN_WIDTH)/2
 #define SNAKE_CHAR '#'
 #define FOOD_CHAR '$'
 
+/* TODO:
 
+Add keyboard input handling
+Add snake/food rendering
+Point handling
+Game over handling
+Restart vs quit
+
+*/
 // ! Global Variables !
 bool GAME_OVER = false;
 int points = 0;
@@ -87,7 +96,7 @@ snake* initSnake(WINDOW *win) {
 }
 
 // Set up other game parameters (points -> 0, first food placement)
-void initGame(WINDOW *win) {
+void initGame() {
     points = 0;
     f = new struct food();
     while (true) {
@@ -122,14 +131,29 @@ void movSnake(snake *s) {
     // move the head
     s->snakeQueue.push_front(new struct snakeNode(s->x,s->y));
     // if snake did not eat, pop the last snakeNode, else leave it (grows)
-    if (!(s->y == f->y && s->x == f->y)) s->snakeQueue.pop_back();
+    if (!(s->y == f->y && s->x == f->y)) {
+        s->snakeQueue.pop_back();
+    }
+    else points += 1;
     return;
+}
+
+/**
+ * Called on each game 'turn' to update the screen.
+ * Redraws the entire game bounds with snake and food placements
+ */
+void updateGameWindow(WINDOW *win, snake *s) {
+    wclear(win);
+    box(win,0,0);
+    mvwprintw(win, 0, 1, "* Snake Points: %d *", points);
+
 }
 
 
 int main() {
     WINDOW *win = displayInit();
     struct snake *s = initSnake(win);
+    initGame();
     wrefresh(win);
     getch(); // pause for debugging
     
