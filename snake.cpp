@@ -183,7 +183,6 @@ void movSnake(snake *s) {
     // move the head
     s->snakeQueue.push_front(snakeNode(s->x, s->y));
     // if snake did not eat, pop the last snakeNode, else leave it (grows)
-    //FIXME: Probably should move before self-collision check
     if (!(s->y == f.y && s->x == f.x)) {
         s->snakeQueue.pop_back();
     }
