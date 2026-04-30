@@ -29,8 +29,8 @@ struct food *f;
 // randomizer for food placement
 random_device rd;
 mt19937 gen(rd());
-uniform_int_distribution<> distX(1, WIN_WIDTH-1); // for X ranges
-uniform_int_distribution<> distY(1,WIN_HEIGHT-1); // for Y range
+uniform_int_distribution<> distX(1, WIN_WIDTH-2); // for X ranges
+uniform_int_distribution<> distY(1,WIN_HEIGHT-2); // for Y range
 
 enum Direction {
     DUP,
@@ -77,6 +77,7 @@ WINDOW* displayInit() {
     refresh();
     WINDOW *win = newwin(WIN_HEIGHT, WIN_WIDTH, WIN_Y, WIN_X);
     curs_set(0);
+    keypad(stdscr, TRUE);
     box(win, 0, 0);
     mvwprintw(win, 0, 1, "* Snake *");
     wrefresh(win);
@@ -107,6 +108,48 @@ void initGame() {
     return;
 }
 
+
+/**
+ * Called on each game 'turn' to update the screen.
+ * Redraws the entire game bounds with snake and food placements
+ * 
+ * Runs AFTER all game logic has been updated
+ * May not need to update the whole window each frame?
+ */
+void updateGameWindow(WINDOW *win, snake *s) {
+    wclear(win);
+    box(win,0,0);
+    mvwprintw(win, 0, 1, "* Snake Points: %d *", points);
+    // print snake
+    for (int i = 0; i < s->length; i++) {
+        mvwprintw(win, s->snakeQueue[i]->y, s->snakeQueue[i]->x, "%c", SNAKE_CHAR);
+    }
+    // print food
+    mvwprintw(win, f->y, f->x, "%c", FOOD_CHAR);
+    wrefresh(win);
+    
+}
+
+void placeFood(snake *s) {
+    bool placed = false;
+    bool collision;
+    while (!placed) {
+        collision = false;
+        f->x = distX(gen);
+        f->y = distY(gen);
+        
+        for (int i = 0; i < s->length; i++) {
+            if (f->x == s->snakeQueue[i]->x && f->y == s->snakeQueue[i]->y) {
+                collision = true;
+                break;
+            }
+        }
+        if (collision) continue;
+        else placed = true;
+    }
+    return;
+}
+
 /**
  * Handle updating the snake data (POST MOVE INPUT!)
  */
@@ -127,7 +170,7 @@ void movSnake(snake *s) {
             break;
     }
     // check for wall collision
-    if (s->y == 0 || s->x == 0 || s->y == WIN_HEIGHT || s->x == WIN_WIDTH) {
+    if (s->y == 0 || s->x == 0 || s->y == WIN_HEIGHT-1 || s->x == WIN_WIDTH-1) {
         GAME_OVER = true;
         return;
     }
@@ -142,42 +185,51 @@ void movSnake(snake *s) {
     s->snakeQueue.push_front(new struct snakeNode(s->x,s->y));
     // if snake did not eat, pop the last snakeNode, else leave it (grows)
     //FIXME: Probably should move before self-collision check
-    if (!(s->y == f->y && s->x == f->y)) {
+    if (!(s->y == f->y && s->x == f->x)) {
         s->snakeQueue.pop_back();
     }
-    else points += 1;
+    else {
+        points += 1;
+        s->length += 1;
+        placeFood(s);
+    }
     return;
 }
-
-/**
- * Called on each game 'turn' to update the screen.
- * Redraws the entire game bounds with snake and food placements
- * 
- * Runs AFTER all game logic has been updated
- * May not need to update the whole window each frame?
- */
-void updateGameWindow(WINDOW *win, snake *s) {
-    wclear(win);
-    box(win,0,0);
-    mvwprintw(win, 0, 1, "* Snake Points: %d *", points);
-    // print snake
-    for (int i = 0; i < s->length; i++) {
-        mvwprintw(win, s->snakeQueue[i]->y, s->snakeQueue[i]->x, "%c", SNAKE_CHAR);
-    }
-    // print food
-    mvwprintw(win, f->y, f->x, "%c", FOOD_CHAR);
-    wrefresh(win);
-
-}
-
 
 int main() {
     WINDOW *win = displayInit();
     struct snake *s = initSnake(win);
     initGame();
-
-    getch(); // pause for debugging
+    updateGameWindow(win,s);
     
+    int mv;
+    
+    // game loop
+    while (true) {
+        
+        if (GAME_OVER) break;
+        
+        mv = getch();
+        switch (mv) {
+            case KEY_RIGHT:
+                s->currDir=DRIGHT;
+                break;
+            case KEY_LEFT:
+                s->currDir=DLEFT;
+                break;
+            case KEY_UP:
+                s->currDir=DUP;
+                break;
+            case KEY_DOWN:
+                s->currDir=DDOWN;
+                break;
+        }
+
+        movSnake(s);
+        updateGameWindow(win, s);
+    }
+
+    nocbreak();
     endwin();
     return 0;
 
