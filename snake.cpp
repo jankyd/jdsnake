@@ -24,7 +24,6 @@ Restart vs quit?
 // ! Global Variables !
 bool GAME_OVER = false;
 int points = 0;
-struct food *f;
 
 // randomizer for food placement
 random_device rd;
@@ -44,6 +43,7 @@ struct food {
     int y;
 };
 
+struct food f;
 /**
  * Uses a deque to store 
  */
@@ -60,7 +60,7 @@ struct snake {
     int y;
 
     int length;
-    std::deque<snakeNode*> snakeQueue;
+    std::deque<snakeNode> snakeQueue;
     Direction currDir = DRIGHT;
 };
 
@@ -89,7 +89,7 @@ snake* initSnake(WINDOW *win) {
     snake->y = WIN_HEIGHT / 2;
     snake->x = 4;
     // place the head
-    snake->snakeQueue.push_front(new struct snakeNode(snake->x, snake->y));
+    snake->snakeQueue.push_front(snakeNode(snake->x, snake->y));
     snake->length = 1;
     return snake;
 }
@@ -97,12 +97,11 @@ snake* initSnake(WINDOW *win) {
 // Set up other game parameters (points -> 0, first food placement)
 void initGame() {
     points = 0;
-    f = new struct food();
     while (true) {
-        f->x = distX(gen);
-        f->y = distY(gen);
+        f.x = distX(gen);
+        f.y = distY(gen);
         // ensure it doesn't generate on the snake head
-        if (!(f->x == 4 && f->y == WIN_HEIGHT / 2)) break;
+        if (!(f.x == 4 && f.y == WIN_HEIGHT / 2)) break;
     }
 
     return;
@@ -122,10 +121,10 @@ void updateGameWindow(WINDOW *win, snake *s) {
     mvwprintw(win, 0, 1, "* Snake Points: %d *", points);
     // print snake
     for (int i = 0; i < s->length; i++) {
-        mvwprintw(win, s->snakeQueue[i]->y, s->snakeQueue[i]->x, "%c", SNAKE_CHAR);
+        mvwprintw(win, s->snakeQueue[i].y, s->snakeQueue[i].x, "%c", SNAKE_CHAR);
     }
     // print food
-    mvwprintw(win, f->y, f->x, "%c", FOOD_CHAR);
+    mvwprintw(win, f.y, f.x, "%c", FOOD_CHAR);
     wrefresh(win);
     
 }
@@ -135,11 +134,11 @@ void placeFood(snake *s) {
     bool collision;
     while (!placed) {
         collision = false;
-        f->x = distX(gen);
-        f->y = distY(gen);
+        f.x = distX(gen);
+        f.y = distY(gen);
         
         for (int i = 0; i < s->length; i++) {
-            if (f->x == s->snakeQueue[i]->x && f->y == s->snakeQueue[i]->y) {
+            if (f.x == s->snakeQueue[i].x && f.y == s->snakeQueue[i].y) {
                 collision = true;
                 break;
             }
@@ -176,16 +175,16 @@ void movSnake(snake *s) {
     }
     // check for collision with self
     for (int i = 0; i < s->length; i++) {
-        if (s->x == s->snakeQueue[i]->x && s->y == s->snakeQueue[i]->y) {
+        if (s->x == s->snakeQueue[i].x && s->y == s->snakeQueue[i].y) {
             GAME_OVER = true;
             return;
         }
     }
     // move the head
-    s->snakeQueue.push_front(new struct snakeNode(s->x,s->y));
+    s->snakeQueue.push_front(snakeNode(s->x, s->y));
     // if snake did not eat, pop the last snakeNode, else leave it (grows)
     //FIXME: Probably should move before self-collision check
-    if (!(s->y == f->y && s->x == f->x)) {
+    if (!(s->y == f.y && s->x == f.x)) {
         s->snakeQueue.pop_back();
     }
     else {
@@ -235,6 +234,7 @@ int main() {
 
     nocbreak();
     endwin();
+    delete s;
     return 0;
 
 }
