@@ -16,8 +16,6 @@ using namespace std;
 
 /* TODO:
 
-Add keyboard input handling
-Game over handling
 Restart vs quit?
 
 */
