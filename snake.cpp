@@ -73,7 +73,7 @@ WINDOW* displayInit() {
     clear();
     noecho();
     cbreak();
-    //timeout(20);
+    timeout(1000); // sets getch() timeout to 1 second
     refresh();
     WINDOW *win = newwin(WIN_HEIGHT, WIN_WIDTH, WIN_Y, WIN_X);
     curs_set(0);
@@ -212,15 +212,19 @@ int main() {
         mv = getch();
         switch (mv) {
             case KEY_RIGHT:
+                if (s->currDir == DLEFT) break; // prevent 180s
                 s->currDir=DRIGHT;
                 break;
             case KEY_LEFT:
+                if (s->currDir == DRIGHT) break; // prevent 180s
                 s->currDir=DLEFT;
                 break;
             case KEY_UP:
+                if (s->currDir == DDOWN) break; // prevent 180s
                 s->currDir=DUP;
                 break;
             case KEY_DOWN:
+                if (s->currDir == DUP) break; // prevent 180s
                 s->currDir=DDOWN;
                 break;
         }
