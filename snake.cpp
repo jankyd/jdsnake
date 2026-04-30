@@ -17,10 +17,8 @@ using namespace std;
 /* TODO:
 
 Add keyboard input handling
-Add snake/food rendering
-Point handling
 Game over handling
-Restart vs quit
+Restart vs quit?
 
 */
 // ! Global Variables !
@@ -128,9 +126,22 @@ void movSnake(snake *s) {
             s->y += 1;
             break;
     }
+    // check for wall collision
+    if (s->y == 0 || s->x == 0 || s->y == WIN_HEIGHT || s->x == WIN_WIDTH) {
+        GAME_OVER = true;
+        return;
+    }
+    // check for collision with self
+    for (int i = 0; i < s->length; i++) {
+        if (s->x == s->snakeQueue[i]->x && s->y == s->snakeQueue[i]->y) {
+            GAME_OVER = true;
+            return;
+        }
+    }
     // move the head
     s->snakeQueue.push_front(new struct snakeNode(s->x,s->y));
     // if snake did not eat, pop the last snakeNode, else leave it (grows)
+    //FIXME: Probably should move before self-collision check
     if (!(s->y == f->y && s->x == f->y)) {
         s->snakeQueue.pop_back();
     }
@@ -141,11 +152,21 @@ void movSnake(snake *s) {
 /**
  * Called on each game 'turn' to update the screen.
  * Redraws the entire game bounds with snake and food placements
+ * 
+ * Runs AFTER all game logic has been updated
+ * May not need to update the whole window each frame?
  */
 void updateGameWindow(WINDOW *win, snake *s) {
     wclear(win);
     box(win,0,0);
     mvwprintw(win, 0, 1, "* Snake Points: %d *", points);
+    // print snake
+    for (int i = 0; i < s->length; i++) {
+        mvwprintw(win, s->snakeQueue[i]->y, s->snakeQueue[i]->x, "%c", SNAKE_CHAR);
+    }
+    // print food
+    mvwprintw(win, f->y, f->x, "%c", FOOD_CHAR);
+    wrefresh(win);
 
 }
 
@@ -154,7 +175,7 @@ int main() {
     WINDOW *win = displayInit();
     struct snake *s = initSnake(win);
     initGame();
-    wrefresh(win);
+
     getch(); // pause for debugging
     
     endwin();
