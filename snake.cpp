@@ -13,6 +13,10 @@ using namespace std;
 #define WIN_X (COLS - WIN_WIDTH)/2
 #define SNAKE_CHAR '#'
 #define FOOD_CHAR '$'
+#define HEAD_UP '^'
+#define HEAD_RIGHT '>'
+#define HEAD_DOWN 'v'
+#define HEAD_LEFT '<'
 
 /* TODO:
 
@@ -119,11 +123,40 @@ void updateGameWindow(WINDOW *win, snake *s) {
     mvwprintw(win, 0, 1, "* Snake Points: %d *", points);
     // print snake
     for (int i = 0; i < s->length; i++) {
+        // Print the head directionally
+        if (i == 0) {
+            char head;
+            switch (s->currDir) {
+                case DUP:
+                    head = HEAD_UP;
+                    break;
+                case DDOWN:
+                    head = HEAD_DOWN;
+                    break;
+                case DRIGHT:
+                    head = HEAD_RIGHT;
+                    break;
+                case DLEFT:
+                    head = HEAD_LEFT;
+                    break;
+            }
+            mvwprintw(win, s->snakeQueue[i].y, s->snakeQueue[i].x, "%c", head);
+            continue;    
+        }
+        // Print rest of body
         mvwprintw(win, s->snakeQueue[i].y, s->snakeQueue[i].x, "%c", SNAKE_CHAR);
     }
     // print food
     mvwprintw(win, f.y, f.x, "%c", FOOD_CHAR);
+    // Print game over if Game is over :P
+    if (GAME_OVER) {
+        mvwprintw(win, WIN_HEIGHT/2, 4, "GAME OVER!");
+        wrefresh(win);
+        timeout(-1);
+        getch();
+    }
     wrefresh(win);
+    
     
 }
 
@@ -232,6 +265,7 @@ int main() {
     nocbreak();
     endwin();
     delete s;
+    std::cout << "Game over! Try and beat your score of " << points << " next time!" << std::endl;
     return 0;
 
 }
