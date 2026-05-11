@@ -115,7 +115,6 @@ void initGame() {
  * Redraws the entire game bounds with snake and food placements
  * 
  * Runs AFTER all game logic has been updated
- * May not need to update the whole window each frame?
  */
 void updateGameWindow(WINDOW *win, snake *s) {
     wclear(win);
@@ -150,7 +149,8 @@ void updateGameWindow(WINDOW *win, snake *s) {
     mvwprintw(win, f.y, f.x, "%c", FOOD_CHAR);
     // Print game over if Game is over :P
     if (GAME_OVER) {
-        mvwprintw(win, WIN_HEIGHT/2, 4, "GAME OVER!");
+        mvwprintw(win, (WIN_HEIGHT/2)-1, 4, "GAME OVER!");
+        mvwprintw(win, (WIN_HEIGHT/2), 4, "Your Score: %d", points);
         wrefresh(win);
         timeout(-1);
         getch();
@@ -265,7 +265,7 @@ int main() {
     nocbreak();
     endwin();
     delete s;
-    std::cout << "Game over! Try and beat your score of " << points << " next time!" << std::endl;
+    std::cout << "Try and beat your score of " << points << " next time!" << std::endl;
     return 0;
 
 }
